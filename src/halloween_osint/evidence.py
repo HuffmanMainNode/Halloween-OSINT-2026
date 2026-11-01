@@ -76,11 +76,24 @@ def verify_manifest(manifest_path: str | Path, detect_unlisted: bool = True) -> 
         rel = Path(item["path"])
         if rel.is_absolute() or ".." in rel.parts:
             raise ValueError(f"Unsafe manifest path: {item['path']}")
-        target = (root / rel).resolve(strict=False)
+        candidate = root / rel
+        # Reject symlinks in any path component. Resolving first would erase
+        # evidence that the recorded path has changed into a symlink.
+        cursor = root
+        has_symlink = False
+        for part in rel.parts:
+            cursor = cursor / part
+            if cursor.is_symlink():
+                has_symlink = True
+                break
+        seen.add(rel.as_posix())
+        if has_symlink:
+            results.append({"path": rel.as_posix(), "status": "unsafe_symlink"})
+            continue
+        target = candidate.resolve(strict=False)
         if not _inside(target, root):
             raise ValueError(f"Manifest path escapes root: {item['path']}")
-        seen.add(rel.as_posix())
-        if not target.is_file() or target.is_symlink():
+        if not target.is_file():
             results.append({"path": rel.as_posix(), "status": "missing"})
             continue
         digest = hashlib.sha256()
