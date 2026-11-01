@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/HuffmanMainNode/Halloween-OSINT-2026/blob/main/schemas/evidence-manifest.schema.json",
+  "title": "Halloween OSINT Evidence Manifest",
+  "type": "object",
+  "required": ["schema_version", "created_at", "algorithm", "root", "files"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "algorithm": {"const": "sha256"},
+    "root": {"type": "string"},
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "size_bytes", "sha256"],
+        "properties": {
+          "path": {"type": "string"},
+          "size_bytes": {"type": "integer", "minimum": 0},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
