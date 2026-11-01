@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 import socket
 import ssl
 from datetime import datetime, timezone
@@ -10,7 +11,7 @@ from typing import Any
 
 def observe_domain(hostname: str, timeout: float = 5.0) -> dict[str, Any]:
     host = hostname.strip().rstrip(".").encode("idna").decode("ascii").lower()
-    if not host or len(host) > 253 or any(not label or len(label) > 63 for label in host.split(".")):
+    if (not host or len(host) > 253 or any(\n        not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label)\n        for label in host.split(".")\n    )):
         raise ValueError("Provide a valid DNS hostname")
     if timeout <= 0 or timeout > 20:
         raise ValueError("Timeout must be greater than 0 and no more than 20 seconds")
