@@ -1,0 +1,23 @@
+# Halloween OSINT 2026
+
+> Local-first investigative utilities for evidence integrity, passive public-infrastructure observations, and offline analysis of supplied public transaction records.
+
+## Start here
+
+- [README](README.md): installation, capabilities, and quick start
+- [Agent operating contract](AGENTS.md): safety, tool selection, and output rules
+- [Methods and limitations](docs/METHODS-AND-LIMITATIONS.md): exactly what each module does and does not establish
+- [Agent integration](docs/AGENT-INTEGRATION.md): local stdio MCP server
+- [Transaction input format](docs/TRANSACTION-DATA.md): CSV and JSON schema expectations
+- [Security policy](SECURITY.md): responsible vulnerability reporting
+
+## Deterministic capabilities
+
+- SHA-256 evidence manifests and verification
+- DNS and TLS observations for one operator-supplied hostname
+- Offline transfer aggregation and address-flow graph edges from local CSV/JSON files
+- MCP tool discovery and invocation over local standard input/output
+
+## Important boundaries
+
+No hosted service or paid API is required. No wallet deanonymization, identity attribution, port scanning, exploitation, credential collection, or unauthorized access is provided. All results are limited by their documented source and method.
