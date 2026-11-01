@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .evm_rpc import inspect_transaction
 from .evidence import create_manifest, verify_manifest
 from .infrastructure import observe_domain
 from .ledger import analyze_transactions
@@ -42,6 +43,14 @@ def build_parser() -> argparse.ArgumentParser:
     analyze_cmd.add_argument("input")
     analyze_cmd.add_argument("--output")
 
+    evm_cmd = sub.add_parser("evm", help="Read-only EVM JSON-RPC inspection")
+    evm_sub = evm_cmd.add_subparsers(dest="evm_command", required=True)
+    inspect_cmd = evm_sub.add_parser("inspect", help="Inspect a transaction using your own RPC node")
+    inspect_cmd.add_argument("--rpc-url", required=True)
+    inspect_cmd.add_argument("tx_hash")
+    inspect_cmd.add_argument("--timeout", type=float, default=10.0)
+    inspect_cmd.add_argument("--output")
+
     return parser
 
 
@@ -62,7 +71,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "ledger" and args.ledger_command == "analyze":
             _write(analyze_transactions(args.input), args.output)
             return 0
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        if args.command == "evm" and args.evm_command == "inspect":
+            _write(inspect_transaction(args.rpc_url, args.tx_hash, args.timeout), args.output)
+            return 0
+    except (OSError, ValueError, json.JSONDecodeError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     return 1
