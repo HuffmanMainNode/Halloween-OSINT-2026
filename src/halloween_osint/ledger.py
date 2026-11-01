@@ -7,8 +7,7 @@ from collections import defaultdict
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable
-
+from typing import Any
 
 REQUIRED = {"txid", "from_address", "to_address", "value", "asset"}
 
@@ -34,15 +33,14 @@ def analyze_transactions(path: str | Path) -> dict[str, Any]:
     duplicates: list[str] = []
 
     for index, row in enumerate(rows, start=2):
-        missing = sorted(key for key in REQUIRED if row.get(key) in (None, ""))
+        missing = sorted(key for key in REQUIRED if row.get(key) is None or str(row.get(key)).strip() == "")
         if missing:
             errors.append({"row": index, "error": "missing required fields", "fields": missing})
             continue
         txid = str(row["txid"]).strip()
-        if txid in seen:
-            duplicates.append(txid)
-            continue
-        seen.add(txid)
+        sender = str(row["from_address"]).strip()
+        recipient = str(row["to_address"]).strip()
+        asset = str(row["asset"]).strip().upper()
         try:
             value = Decimal(str(row["value"]))
             if not value.is_finite() or value < 0:
@@ -57,32 +55,40 @@ def analyze_transactions(path: str | Path) -> dict[str, Any]:
             except ValueError:
                 errors.append({"row": index, "error": "timestamp must be ISO-8601"})
                 continue
+        if txid in seen:
+            duplicates.append(txid)
+            continue
+        seen.add(txid)
         transactions.append({
             "txid": txid,
-            "from_address": str(row["from_address"]).strip(),
-            "to_address": str(row["to_address"]).strip(),
+            "from_address": sender,
+            "to_address": recipient,
             "value": format(value, "f"),
-            "asset": str(row["asset"]).strip().upper(),
+            "asset": asset,
             "timestamp": timestamp,
         })
 
     totals: dict[str, Decimal] = defaultdict(Decimal)
-    address_flows: dict[str, dict[str, Decimal]] = defaultdict(lambda: {"sent": Decimal(0), "received": Decimal(0)})
+    flows: dict[str, dict[str, dict[str, Decimal]]] = defaultdict(
+        lambda: {"sent": defaultdict(Decimal), "received": defaultdict(Decimal)}
+    )
     edges: dict[tuple[str, str, str], dict[str, Any]] = {}
     for tx in transactions:
         amount = Decimal(tx["value"])
         asset = tx["asset"]
+        sender, recipient = tx["from_address"], tx["to_address"]
         totals[asset] += amount
-        address_flows[tx["from_address"]]["sent"] += amount
-        address_flows[tx["to_address"]]["received"] += amount
-        key = (tx["from_address"], tx["to_address"], asset)
+        flows[sender]["sent"][asset] += amount
+        flows[recipient]["received"][asset] += amount
+        key = (sender, recipient, asset)
         if key not in edges:
-            edges[key] = {"from": key[0], "to": key[1], "asset": asset, "transaction_count": 0, "total_value": Decimal(0)}
+            edges[key] = {"from": sender, "to": recipient, "asset": asset,
+                          "transaction_count": 0, "total_value": Decimal(0)}
         edges[key]["transaction_count"] += 1
         edges[key]["total_value"] += amount
 
     return {
-        "input": str(Path(path).name),
+        "input": Path(path).name,
         "method": "offline aggregation of supplied rows; no chain lookup or identity enrichment",
         "transaction_count": len(transactions),
         "rejected_row_count": len(errors),
@@ -90,8 +96,11 @@ def analyze_transactions(path: str | Path) -> dict[str, Any]:
         "errors": errors,
         "totals_by_asset": {asset: format(value, "f") for asset, value in sorted(totals.items())},
         "address_flows": {
-            address: {"sent_by_asset": {}, "received_by_asset": {}}
-            for address in sorted(address_flows)
+            address: {
+                "sent_by_asset": {asset: format(value, "f") for asset, value in sorted(flow["sent"].items())},
+                "received_by_asset": {asset: format(value, "f") for asset, value in sorted(flow["received"].items())},
+            }
+            for address, flow in sorted(flows.items())
         },
         "edges": [
             {"from": item["from"], "to": item["to"], "asset": item["asset"],
