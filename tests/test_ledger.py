@@ -18,6 +18,9 @@ def test_ledger_aggregates_per_asset_and_flags_duplicate(tmp_path):
     assert result["transaction_count"] == 3
     assert result["duplicate_txids"] == ["b"]
     assert result["totals_by_asset"] == {"COIN": "1.75", "TOKEN": "10"}
+    assert result["address_flows"]["A"]["sent_by_asset"] == {"COIN": "1.25", "TOKEN": "10"}
+    assert result["address_flows"]["B"]["received_by_asset"] == {"COIN": "1.25"}
+    assert result["address_flows"]["B"]["sent_by_asset"] == {"COIN": "0.5"}
 
 
 def test_bad_amount_rejected(tmp_path):
