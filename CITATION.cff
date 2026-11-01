@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If this software supports your research, please cite the repository."
+title: "Halloween OSINT 2026"
+type: software
+authors:
+  - family-names: Huffman
+    given-names: Robert
+    name-suffix: " (MrCakes)"
+repository-code: "https://github.com/HuffmanMainNode/Halloween-OSINT-2026"
+license: Apache-2.0
+version: 0.1.0
+date-released: 2026-10-31
