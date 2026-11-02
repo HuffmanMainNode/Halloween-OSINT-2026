@@ -7,7 +7,7 @@ import pytest
 pytest.importorskip("oix")
 
 from oix.identity import generate_identity, load_private_key
-from oix.inbox import SQLiteInbox
+from oix.inbox import InboxError, SQLiteInbox
 from oix.policy import CapabilityPolicy
 
 from halloween_osint.oix_bridge import create_evidence_message
@@ -57,7 +57,7 @@ def test_bridge_rejects_unsupported_evidence_type(tmp_path):
     generate_identity(identity_dir, "Halloween OSINT", ["public.research"])
     artifact = tmp_path / "report.json"
     artifact.write_text("{}", encoding="utf-8")
-    with pytest.raises(Exception):
+    with pytest.raises(InboxError):
         create_evidence_message(
             identity_dir=identity_dir,
             recipient="ed25519:" + "a" * 64,
