@@ -16,8 +16,12 @@ Configure an MCP-compatible client to launch that command in the repository's Py
 - `verify_evidence_manifest`: verify recorded file hashes.
 - `observe_domain`: perform DNS and TLS observations for a supplied hostname.
 - `analyze_transactions`: analyze a supplied CSV or JSON file offline.
+- EVM JSON-RPC inspection is CLI-only and is not exposed through MCP.
+- EVM JSON-RPC inspection is CLI-only and is not exposed through MCP.
 
-The server only accepts local file paths supplied by the connected client. Run it with the minimum filesystem permissions needed for the task. Do not expose it as a network service.
+The EVM JSON-RPC inspection command is currently CLI-only and is not exposed through MCP.
+
+The server can be restricted to an operator-selected root with `halloween-osint-mcp --root /path/to/workspace` or `HALLOWEEN_OSINT_ROOT=/path/to/workspace`. With a root configured, every MCP file path, including the root embedded in an evidence manifest, must resolve inside it. Symlink escapes are rejected. Output files are not overwritten unless the tool call explicitly sets `overwrite: true`. Without a configured root, file paths are not confined by the MCP server. Run it with the minimum filesystem permissions needed for the task. Do not expose it as a network service.
 
 ## Protocol behavior
 

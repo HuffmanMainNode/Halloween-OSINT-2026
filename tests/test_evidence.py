@@ -1,5 +1,3 @@
-import json
-
 from halloween_osint.evidence import create_manifest, verify_manifest
 
 
