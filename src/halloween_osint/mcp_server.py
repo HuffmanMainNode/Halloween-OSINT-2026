@@ -78,6 +78,9 @@ def _call_tool(
         return create_manifest(str(directory), str(output))
     if name == "verify_evidence_manifest":
         manifest = _scoped_path(arguments["manifest"], root, must_exist=True)
+        manifest_data = json.loads(manifest.read_text(encoding="utf-8"))
+        if root is not None:
+            _scoped_path(manifest_data["root"], root, must_exist=True)
         return verify_manifest(str(manifest))
     if name == "observe_domain":
         return observe_domain(arguments["hostname"], float(arguments.get("timeout", 5.0)))
