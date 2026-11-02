@@ -119,10 +119,11 @@ def handle(message: dict[str, Any], root: Path | None = None) -> dict[str, Any] 
         params = message.get("params") or {}
         name = params.get("name")
         arguments = params.get("arguments") or {}
+        # Tool arguments are untrusted; any tool failure becomes a structured MCP error.
         try:
             result = _call_tool(name, arguments, root)
             return _response(request_id, {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False)}], "isError": False})
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             return _response(request_id, {"content": [{"type": "text", "text": f"{type(exc).__name__}: {exc}"}], "isError": True})
     if request_id is None:
         return None
@@ -146,9 +147,10 @@ def main() -> None:
         except json.JSONDecodeError:
             response = _response(None, error={"code": -32700, "message": "Parse error"})
         else:
+            # Malformed request objects must not terminate the stdio server process.
             try:
                 response = handle(request, root)
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 response = _response(
                     request.get("id") if isinstance(request, dict) else None,
                     error={"code": -32603, "message": f"Internal error: {type(exc).__name__}"},
