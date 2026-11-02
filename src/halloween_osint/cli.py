@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from . import __version__
 from .evm_rpc import inspect_transaction
 from .evidence import create_manifest, verify_manifest
 from .infrastructure import observe_domain
@@ -23,6 +24,7 @@ def _write(data: Any, output: str | None) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="halloween-osint", description="Local-first investigative utilities")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     hash_cmd = sub.add_parser("hash", help="Create a SHA-256 evidence manifest")
