@@ -4,8 +4,8 @@ from __future__ import annotations
 import csv
 import json
 from collections import defaultdict
-from decimal import Decimal, InvalidOperation
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -51,7 +51,7 @@ def analyze_transactions(path: str | Path) -> dict[str, Any]:
         timestamp = str(row.get("timestamp") or "").strip() or None
         if timestamp:
             try:
-                datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                datetime.fromisoformat(timestamp)
             except ValueError:
                 errors.append({"row": index, "error": "timestamp must be ISO-8601"})
                 continue
