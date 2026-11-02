@@ -10,6 +10,7 @@ import hashlib
 import mimetypes
 from datetime import UTC, datetime
 from pathlib import Path
+from uuid import uuid4
 from typing import Any
 
 
@@ -38,7 +39,7 @@ def create_evidence_message(
     try:
         from oix.envelope import create_message
         from oix.identity import load_private_key
-        from oix.inbox import _validate_evidence_submit_payload
+        from oix.inbox import validate_evidence_submit_payload
     except ImportError as exc:
         raise RuntimeError(
             "OIX is optional; install Open-Intelligence-Exchange alongside this project"
@@ -59,7 +60,7 @@ def create_evidence_message(
     selected_media_type = media_type or mimetypes.guess_type(source.name)[0] or "application/octet-stream"
     payload = {
         "schema_version": "1.0",
-        "evidence_id": __import__("uuid").uuid4().__str__(),
+        "evidence_id": str(uuid4()),
         "evidence_type": evidence_type,
         "source_uri": source_uri,
         "source_timestamp": source_timestamp,
@@ -76,7 +77,7 @@ def create_evidence_message(
         "summary": summary,
         "limitations": limitations,
     }
-    _validate_evidence_submit_payload(payload)
+    validate_evidence_submit_payload(payload)
     return create_message(
         load_private_key(identity_dir),
         recipient,
