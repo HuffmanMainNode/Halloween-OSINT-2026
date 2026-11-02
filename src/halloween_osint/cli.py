@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__
-from .evm_rpc import inspect_transaction
 from .evidence import create_manifest, verify_manifest
+from .evm_rpc import inspect_transaction
 from .infrastructure import observe_domain
 from .ledger import analyze_transactions
 
