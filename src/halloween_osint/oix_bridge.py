@@ -10,8 +10,8 @@ import hashlib
 import mimetypes
 from datetime import UTC, datetime
 from pathlib import Path
-from uuid import uuid4
 from typing import Any
+from uuid import uuid4
 
 
 def create_evidence_message(
