@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from . import __version__
 from .evidence import create_manifest, verify_manifest
 from .infrastructure import observe_domain
 from .ledger import analyze_transactions
@@ -108,7 +109,7 @@ def handle(message: dict[str, Any], root: Path | None = None) -> dict[str, Any] 
         return _response(request_id, {
             "protocolVersion": PROTOCOL_VERSION,
             "capabilities": {"tools": {"listChanged": False}},
-            "serverInfo": {"name": "halloween-osint", "version": "0.1.0"}
+            "serverInfo": {"name": "halloween-osint", "version": __version__}
         })
     if method == "ping":
         return _response(request_id, {})
