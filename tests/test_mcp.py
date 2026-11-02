@@ -100,7 +100,7 @@ def test_mcp_allows_explicit_output_overwrite(tmp_path):
     }
     result = handle(request, root.resolve())
     assert result["result"]["isError"] is False
-    assert json.loads(output.read_text())["entries"]
+    assert json.loads(output.read_text())["files"]
 
 
 def test_malformed_json_returns_parse_error(monkeypatch, tmp_path):
