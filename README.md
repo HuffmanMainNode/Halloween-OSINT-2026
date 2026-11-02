@@ -17,6 +17,10 @@ A practical, local-first toolkit for preserving digital evidence, examining publ
 
 The project does not claim to identify anonymous people behind domains or wallet addresses. A relationship in data is not proof of common ownership, intent, or control.
 
+## Onboarding
+
+New operators: start with [Human Onboarding](docs/USER-ONBOARDING.md). Agents: read [AGENTS.md](AGENTS.md) and [Agent Integration](docs/AGENT-INTEGRATION.md) before connecting the local stdio MCP server.
+
 ## Quick start
 
 Requires Python 3.11 or newer. Runtime uses only the Python standard library.
