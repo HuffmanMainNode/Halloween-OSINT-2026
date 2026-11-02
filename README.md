@@ -108,3 +108,15 @@ halloween-osint evm inspect --rpc-url https://your-node.example/rpc 0x<64-hex-ch
 ```
 
 It requests the chain ID, transaction, and receipt from the operator-selected node. It never signs or broadcasts transactions. Remote endpoints must use HTTPS; HTTP is allowed only for loopback. Node-reported data is not independent consensus verification. See [EVM RPC inspection](docs/EVM-RPC.md).
+
+
+## Optional OIX evidence exchange
+
+Install the Open Intelligence Exchange repository alongside Halloween OSINT to enable `halloween_osint.oix_bridge`. The bridge hashes a selected local report or evidence artifact and creates a signed, metadata-only OIX `evidence.submit` envelope. The file itself is never uploaded or attached.
+
+The receiving OIX agent verifies the sender, validates the evidence schema, and places the record into its pending-review queue. An operator must approve it before downstream ingestion. See [OIX evidence bridge](docs/OIX-EVIDENCE-BRIDGE.md) and run the synthetic demonstration with:
+
+```bash
+python examples/oix_evidence_bridge_demo.py
+```
+
