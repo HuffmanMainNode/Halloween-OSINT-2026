@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 - Unreleased
+
+- Clarify that commit `cb07208` wired the EVM inspection command only; SBOM inventory and KEV correlation are implemented in Huffman Cyber Observatory, not this repository.
+- Add public-hostname SSRF protections to passive domain observation and root-scoped MCP filesystem access.
+- Document the read-only EVM CLI inspector and its current CLI-only status.
+
 ## 0.1.0 - 2026-10-31
 
 Initial public foundation release.
