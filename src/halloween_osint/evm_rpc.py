@@ -9,6 +9,8 @@ import json
 import re
 import urllib.error
 import urllib.request
+
+from . import __version__
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -30,10 +32,10 @@ def _rpc(endpoint: str, method: str, params: list[Any], timeout: float) -> Any:
     payload = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode()
     request = urllib.request.Request(
         endpoint, data=payload, headers={"Content-Type": "application/json",
-        "Accept": "application/json", "User-Agent": "HalloweenOSINT/0.2"}, method="POST"
+        "Accept": "application/json", "User-Agent": f"HalloweenOSINT/{__version__}"}, method="POST"
     )
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        with urllib.request.urlopen(request, timeout=timeout) as response:  # nosec B310: endpoint scheme and host are validated
             if response.status != 200:
                 raise RuntimeError(f"RPC returned HTTP {response.status}")
             raw = response.read(MAX_RESPONSE_BYTES + 1)
