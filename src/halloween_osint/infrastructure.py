@@ -37,7 +37,7 @@ def observe_domain(hostname: str, timeout: float = 5.0) -> dict[str, Any]:
     except OSError as exc:
         raise ValueError(f"Could not resolve public hostname: {type(exc).__name__}") from exc
 
-    resolved: dict[tuple[int, str], tuple[int, tuple[Any, ...]]] = {}
+    resolved: set[tuple[int, str]] = set()
     for family, socktype, proto, _canonname, sockaddr in answers:
         address = sockaddr[0]
         try:
@@ -46,7 +46,7 @@ def observe_domain(hostname: str, timeout: float = 5.0) -> dict[str, Any]:
             raise ValueError("Resolver returned an invalid IP address") from exc
         if not parsed.is_global:
             raise ValueError("Hostname resolves to a non-public address; connection refused")
-        resolved[(family, address)] = (family, sockaddr)
+        resolved.add((family, address))
 
     if not resolved:
         raise ValueError("Hostname did not resolve to a public address")
@@ -69,7 +69,7 @@ def observe_domain(hostname: str, timeout: float = 5.0) -> dict[str, Any]:
 
     context = ssl.create_default_context()
     errors: list[str] = []
-    for (family, address), (_resolved_family, _sockaddr) in resolved.items():
+    for family, address in resolved:
         if family == socket.AF_INET6:
             connect_address = (address, 443, 0, 0)
         else:
