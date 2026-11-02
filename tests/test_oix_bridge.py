@@ -6,7 +6,7 @@ import pytest
 
 pytest.importorskip("oix")
 
-from oix.identity import generate_identity, load_private_key
+from oix.identity import generate_identity
 from oix.inbox import InboxError, SQLiteInbox
 from oix.policy import CapabilityPolicy
 
@@ -75,7 +75,7 @@ def test_bridge_rejects_non_deterministic_summary(tmp_path):
     generate_identity(identity_dir, "Halloween OSINT", ["public.research"])
     artifact = tmp_path / "report.json"
     artifact.write_text("{}", encoding="utf-8")
-    with pytest.raises(Exception):
+    with pytest.raises(InboxError):
         create_evidence_message(
             identity_dir=identity_dir,
             recipient="ed25519:" + "a" * 64,
