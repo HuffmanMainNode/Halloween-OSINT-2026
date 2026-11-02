@@ -97,3 +97,14 @@ Initial public foundation release. Treat outputs as investigative leads, not leg
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
+
+
+## Read-only EVM inspection
+
+The CLI includes a read-only EVM JSON-RPC inspector:
+
+```bash
+halloween-osint evm inspect --rpc-url https://your-node.example/rpc 0x<64-hex-character-transaction-hash>
+```
+
+It requests the chain ID, transaction, and receipt from the operator-selected node. It never signs or broadcasts transactions. Remote endpoints must use HTTPS; HTTP is allowed only for loopback. Node-reported data is not independent consensus verification. See [EVM RPC inspection](docs/EVM-RPC.md).
