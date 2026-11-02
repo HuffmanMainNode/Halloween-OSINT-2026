@@ -9,10 +9,10 @@ import json
 import re
 import urllib.error
 import urllib.request
-
-from . import __version__
 from typing import Any
 from urllib.parse import urlsplit
+
+from . import __version__
 
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 TX_HASH = re.compile(r"^0x[0-9a-fA-F]{64}$")
