@@ -91,7 +91,7 @@ def test_unsafe_manifest_paths_are_rejected(tmp_path, path):
         ({"path": "file.txt", "size_bytes": 0, "sha256": "not-a-hash"}, ValueError),
     ],
 )
-def test_malformed_manifest_file_metadata_is_rejected(tmp_path, case): 
+def test_malformed_manifest_file_metadata_is_rejected(tmp_path, case):
     entry, error_type = case
     evidence = tmp_path / "case"
     evidence.mkdir()
@@ -109,7 +109,6 @@ def test_malformed_manifest_file_metadata_is_rejected(tmp_path, case):
 
 
 def test_manifest_files_must_be_an_array(tmp_path):
-    import json
     evidence = tmp_path / "case"
     evidence.mkdir()
     manifest_path = tmp_path / "manifest.json"
