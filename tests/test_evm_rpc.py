@@ -80,7 +80,7 @@ def test_rejects_malformed_hash_and_timeout():
         inspect_transaction("https://node.example/rpc", "0x1234")
     with pytest.raises(ValueError):
         inspect_transaction("https://node.example/rpc", TX, timeout=float("nan"))
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         inspect_transaction("https://node.example/rpc", TX, timeout=True)
 
 
