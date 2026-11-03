@@ -67,7 +67,6 @@ def test_duplicate_manifest_paths_are_rejected(tmp_path):
     ["../outside.txt", "/etc/passwd", "C:\\Windows\\win.ini", "folder\\..\\secret"],
 )
 def test_unsafe_manifest_paths_are_rejected(tmp_path, path):
-    import json
     evidence = tmp_path / "case"
     evidence.mkdir()
     manifest = {
@@ -93,7 +92,6 @@ def test_unsafe_manifest_paths_are_rejected(tmp_path, path):
 )
 def test_malformed_manifest_file_metadata_is_rejected(tmp_path, entry):
     import json
-    import pytest
 
     evidence = tmp_path / "case"
     evidence.mkdir()
@@ -124,5 +122,5 @@ def test_manifest_files_must_be_an_array(tmp_path):
         "files": {},
     }), encoding="utf-8")
 
-    with pytest.raises(ValueError, match="files must be an array"):
+    with pytest.raises(TypeError, match="files must be an array"):
         verify_manifest(manifest_path)
