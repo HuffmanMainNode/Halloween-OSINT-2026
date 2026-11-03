@@ -71,7 +71,9 @@ def _validated_manifest(manifest: Any) -> tuple[Path, list[dict[str, Any]]]:
     if manifest.get("schema_version") != "1.0" or manifest.get("algorithm") != "sha256":
         raise ValueError("Unsupported evidence manifest schema or algorithm")
     root_value = manifest.get("root")
-    if not isinstance(root_value, str) or not root_value:
+    if not isinstance(root_value, str):
+        raise TypeError("Manifest root must be a path string")
+    if not root_value:
         raise ValueError("Manifest root must be a non-empty path string")
     root = Path(root_value).expanduser().resolve(strict=True)
     if not root.is_dir():
@@ -105,9 +107,13 @@ def _validated_manifest(manifest: Any) -> tuple[Path, list[dict[str, Any]]]:
         if normalized in seen:
             raise ValueError(f"Duplicate manifest path: {normalized}")
         seen.add(normalized)
-        if not isinstance(digest, str) or not SHA256_PATTERN.fullmatch(digest):
+        if not isinstance(digest, str):
+            raise TypeError(f"SHA-256 digest must be a string for manifest path: {normalized}")
+        if not SHA256_PATTERN.fullmatch(digest):
             raise ValueError(f"Invalid SHA-256 digest for manifest path: {normalized}")
-        if not isinstance(size, int) or isinstance(size, bool) or size < 0:
+        if not isinstance(size, int) or isinstance(size, bool):
+            raise TypeError(f"Byte size must be an integer for manifest path: {normalized}")
+        if size < 0:
             raise ValueError(f"Invalid byte size for manifest path: {normalized}")
     return root, files
 
