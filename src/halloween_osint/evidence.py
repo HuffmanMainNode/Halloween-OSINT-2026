@@ -73,7 +73,7 @@ def _validated_manifest(manifest: Any) -> tuple[Path, list[dict[str, Any]]]:
     if not isinstance(created_at, str):
         raise TypeError("Manifest created_at must be an ISO 8601 string")
     try:
-        timestamp = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+        timestamp = datetime.fromisoformat(created_at)
     except ValueError as exc:
         raise ValueError("Manifest created_at must be a valid ISO 8601 timestamp") from exc
     if timestamp.tzinfo is None:
