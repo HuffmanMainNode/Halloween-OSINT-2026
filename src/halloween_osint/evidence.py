@@ -5,7 +5,7 @@ import hashlib
 import json
 import os
 import re
-from datetime import UTC, datetime
+from datetime import datetime, UTC
 from pathlib import Path, PureWindowsPath
 from typing import Any
 
@@ -67,7 +67,7 @@ def create_manifest(root: str | Path, output: str | Path | None = None) -> dict[
 
 def _validated_manifest(manifest: Any) -> tuple[Path, list[dict[str, Any]]]:
     if not isinstance(manifest, dict):
-        raise ValueError("Evidence manifest must be a JSON object")
+        raise TypeError("Evidence manifest must be a JSON object")
     if manifest.get("schema_version") != "1.0" or manifest.get("algorithm") != "sha256":
         raise ValueError("Unsupported evidence manifest schema or algorithm")
     root_value = manifest.get("root")
@@ -78,17 +78,17 @@ def _validated_manifest(manifest: Any) -> tuple[Path, list[dict[str, Any]]]:
         raise ValueError("Manifest root is not a directory")
     files = manifest.get("files")
     if not isinstance(files, list):
-        raise ValueError("Manifest files must be an array")
+        raise TypeError("Manifest files must be an array")
 
     seen: set[str] = set()
     for index, item in enumerate(files):
         if not isinstance(item, dict):
-            raise ValueError(f"Manifest file entry {index} must be an object")
+            raise TypeError(f"Manifest file entry {index} must be an object")
         path_value = item.get("path")
         digest = item.get("sha256")
         size = item.get("size_bytes")
         if not isinstance(path_value, str) or not path_value.strip():
-            raise ValueError(f"Manifest file entry {index} has an invalid path")
+            raise TypeError(f"Manifest file entry {index} has an invalid path")
         rel = Path(path_value)
         windows_path = PureWindowsPath(path_value)
         if (
