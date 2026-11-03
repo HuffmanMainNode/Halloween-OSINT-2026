@@ -84,7 +84,7 @@ def test_unsafe_manifest_paths_are_rejected(tmp_path, path):
 
 
 @pytest.mark.parametrize(
-    "entry",
+    "case",
     [
         ({"path": "file.txt", "size_bytes": -1, "sha256": "0" * 64}, ValueError),
         ({"path": "file.txt", "size_bytes": True, "sha256": "0" * 64}, TypeError),
