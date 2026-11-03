@@ -94,7 +94,7 @@ def _rpc(endpoint: str, method: str, params: list[Any], timeout: float) -> Any:
             code = error.get("code")
             message = error.get("message")
             if isinstance(code, int) and isinstance(message, str):
-                raise RuntimeError(f"RPC error {code}: {message[:200]}")
+                raise RuntimeError(f"RPC error {code}: {message[:200]}")  # noqa: TRY004
         raise RuntimeError("RPC returned a malformed error object")
     if "result" not in document:
         raise ValueError("JSON-RPC response is missing result")
@@ -118,12 +118,18 @@ def inspect_transaction(endpoint: str, tx_hash: str, timeout: float = 10.0) -> d
         raise ValueError("node returned an invalid transaction object")
     if receipt is not None and not isinstance(receipt, dict):
         raise ValueError("node returned an invalid receipt object")
-    if transaction is not None and transaction.get("hash") is not None:
-        if transaction["hash"] != tx_hash.lower():
-            raise ValueError("node returned a transaction with a mismatched hash")
-    if receipt is not None and receipt.get("transactionHash") is not None:
-        if receipt["transactionHash"] != tx_hash.lower():
-            raise ValueError("node returned a receipt with a mismatched transaction hash")
+    if (
+        transaction is not None
+        and transaction.get("hash") is not None
+        and transaction["hash"].lower() != tx_hash.lower()
+    ):
+        raise ValueError("node returned a transaction with a mismatched hash")
+    if (
+        receipt is not None
+        and receipt.get("transactionHash") is not None
+        and receipt["transactionHash"].lower() != tx_hash.lower()
+    ):
+        raise ValueError("node returned a receipt with a mismatched transaction hash")
     if transaction is None and receipt is not None:
         raise ValueError("node returned a receipt without a matching transaction")
 
