@@ -1,4 +1,5 @@
 import json
+
 import pytest
 
 from halloween_osint.evidence import create_manifest, verify_manifest
@@ -91,8 +92,6 @@ def test_unsafe_manifest_paths_are_rejected(tmp_path, path):
     ],
 )
 def test_malformed_manifest_file_metadata_is_rejected(tmp_path, entry):
-    import json
-
     evidence = tmp_path / "case"
     evidence.mkdir()
     manifest = {
@@ -110,8 +109,6 @@ def test_malformed_manifest_file_metadata_is_rejected(tmp_path, entry):
 
 def test_manifest_files_must_be_an_array(tmp_path):
     import json
-    import pytest
-
     evidence = tmp_path / "case"
     evidence.mkdir()
     manifest_path = tmp_path / "manifest.json"
