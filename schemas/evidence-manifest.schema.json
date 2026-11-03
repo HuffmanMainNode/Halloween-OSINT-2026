@@ -8,16 +8,16 @@
     "schema_version": {"const": "1.0"},
     "created_at": {"type": "string", "format": "date-time"},
     "algorithm": {"const": "sha256"},
-    "root": {"type": "string"},
+    "root": {"type": "string", "minLength": 1},
     "files": {
       "type": "array",
       "items": {
         "type": "object",
         "required": ["path", "size_bytes", "sha256"],
         "properties": {
-          "path": {"type": "string"},
+          "path": {"type": "string", "minLength": 1},
           "size_bytes": {"type": "integer", "minimum": 0},
-          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+          "sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"}
         },
         "additionalProperties": false
       }

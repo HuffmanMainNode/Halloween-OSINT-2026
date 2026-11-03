@@ -69,6 +69,16 @@ def _validated_manifest(manifest: Any) -> tuple[Path, list[dict[str, Any]]]:
         raise TypeError("Evidence manifest must be a JSON object")
     if manifest.get("schema_version") != "1.0" or manifest.get("algorithm") != "sha256":
         raise ValueError("Unsupported evidence manifest schema or algorithm")
+    created_at = manifest.get("created_at")
+    if not isinstance(created_at, str):
+        raise TypeError("Manifest created_at must be an ISO 8601 string")
+    try:
+        timestamp = datetime.fromisoformat(created_at)
+    except ValueError as exc:
+        raise ValueError("Manifest created_at must be a valid ISO 8601 timestamp") from exc
+    if timestamp.tzinfo is None:
+        raise ValueError("Manifest created_at must include a timezone")
+
     root_value = manifest.get("root")
     if not isinstance(root_value, str):
         raise TypeError("Manifest root must be a path string")

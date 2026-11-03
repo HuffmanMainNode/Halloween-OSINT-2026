@@ -72,6 +72,7 @@ def test_unsafe_manifest_paths_are_rejected(tmp_path, path):
     evidence.mkdir()
     manifest = {
         "schema_version": "1.0",
+        "created_at": "2026-11-03T01:00:00+00:00",
         "algorithm": "sha256",
         "root": str(evidence),
         "files": [{"path": path, "size_bytes": 0, "sha256": "0" * 64}],
@@ -97,6 +98,7 @@ def test_malformed_manifest_file_metadata_is_rejected(tmp_path, case):
     evidence.mkdir()
     manifest = {
         "schema_version": "1.0",
+        "created_at": "2026-11-03T01:00:00+00:00",
         "algorithm": "sha256",
         "root": str(evidence),
         "files": [entry],
@@ -108,12 +110,30 @@ def test_malformed_manifest_file_metadata_is_rejected(tmp_path, case):
         verify_manifest(manifest_path)
 
 
+def test_manifest_created_at_must_be_timezone_aware(tmp_path):
+    evidence = tmp_path / "case"
+    evidence.mkdir()
+    manifest = {
+        "schema_version": "1.0",
+        "created_at": "2026-11-03T01:00:00",
+        "algorithm": "sha256",
+        "root": str(evidence),
+        "files": [],
+    }
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must include a timezone"):
+        verify_manifest(manifest_path)
+
+
 def test_manifest_files_must_be_an_array(tmp_path):
     evidence = tmp_path / "case"
     evidence.mkdir()
     manifest_path = tmp_path / "manifest.json"
     manifest_path.write_text(json.dumps({
         "schema_version": "1.0",
+        "created_at": "2026-11-03T01:00:00+00:00",
         "algorithm": "sha256",
         "root": str(evidence),
         "files": {},
