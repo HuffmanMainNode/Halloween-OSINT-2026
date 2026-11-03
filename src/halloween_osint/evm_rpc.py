@@ -126,18 +126,18 @@ def inspect_transaction(endpoint: str, tx_hash: str, timeout: float = 10.0) -> d
         raise TypeError("node returned a non-object transaction")
     if receipt is not None and not isinstance(receipt, dict):
         raise TypeError("node returned a non-object receipt")
-    if (
-        transaction is not None
-        and transaction.get("hash") is not None
-        and transaction["hash"].lower() != tx_hash.lower()
-    ):
-        raise ValueError("node returned a transaction with a mismatched hash")
-    if (
-        receipt is not None
-        and receipt.get("transactionHash") is not None
-        and receipt["transactionHash"].lower() != tx_hash.lower()
-    ):
-        raise ValueError("node returned a receipt with a mismatched transaction hash")
+    if transaction is not None and transaction.get("hash") is not None:
+        returned_hash = transaction["hash"]
+        if not isinstance(returned_hash, str):
+            raise TypeError("node returned a non-string transaction hash")
+        if returned_hash.lower() != tx_hash.lower():
+            raise ValueError("node returned a transaction with a mismatched hash")
+    if receipt is not None and receipt.get("transactionHash") is not None:
+        returned_hash = receipt["transactionHash"]
+        if not isinstance(returned_hash, str):
+            raise TypeError("node returned a non-string receipt transaction hash")
+        if returned_hash.lower() != tx_hash.lower():
+            raise ValueError("node returned a receipt with a mismatched transaction hash")
     if transaction is None and receipt is not None:
         raise ValueError("node returned a receipt without a matching transaction")
 
