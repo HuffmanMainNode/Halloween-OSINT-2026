@@ -1,10 +1,9 @@
 import json
-import urllib.error
 from unittest.mock import patch
 
 import pytest
 
-from halloween_osint.evm_rpc import MAX_RESPONSE_BYTES, _NoRedirect, inspect_transaction
+from halloween_osint.evm_rpc import _NoRedirect, inspect_transaction
 
 TX = "0x" + "a" * 64
 
