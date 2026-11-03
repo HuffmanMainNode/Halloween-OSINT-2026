@@ -80,6 +80,7 @@ See [AGENTS.md](AGENTS.md) and [docs/AGENT-INTEGRATION.md](docs/AGENT-INTEGRATIO
 - **Facts are not guesses:** observations, derived results, and analyst hypotheses must remain distinguishable.
 - **Reproducible:** deterministic analysis of the same input should produce the same substantive result.
 - **Least privilege:** passive collection only; no credential collection, exploitation, stealth, or unauthorized access.
+- **Untrusted RPC data:** EVM responses come from the operator-selected node; redirects and credential-bearing RPC URLs are rejected, but node data is not consensus verification.
 - **Human accountability:** an agent may prepare a report; a person remains responsible for validation and publication.
 - **No fabricated enrichment:** missing data stays missing. No invented ownership, attribution, confidence, or corroboration.
 

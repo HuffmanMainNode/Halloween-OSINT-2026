@@ -10,6 +10,7 @@ from oix.identity import generate_identity
 from oix.inbox import InboxError, SQLiteInbox
 from oix.policy import CapabilityPolicy
 
+from halloween_osint import __version__
 from halloween_osint.oix_bridge import create_evidence_message
 
 
@@ -38,6 +39,7 @@ def test_artifact_is_hashed_and_signed_as_metadata_only_evidence(tmp_path):
     assert payload["artifact"]["sha256"] == hashlib.sha256(content).hexdigest()
     assert payload["artifact"]["size_bytes"] == len(content)
     assert payload["evidence_type"] == "domain_observation"
+    assert payload["collector"]["version"] == __version__
     assert content.decode() not in str(payload)
 
     inbox = SQLiteInbox(

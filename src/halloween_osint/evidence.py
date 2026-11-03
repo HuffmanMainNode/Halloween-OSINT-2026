@@ -4,9 +4,12 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
+
+SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
 
 
 def _inside(path: Path, root: Path) -> bool:
@@ -61,24 +64,70 @@ def create_manifest(root: str | Path, output: str | Path | None = None) -> dict[
     return manifest
 
 
+def _validated_manifest(manifest: Any) -> tuple[Path, list[dict[str, Any]]]:
+    if not isinstance(manifest, dict):
+        raise TypeError("Evidence manifest must be a JSON object")
+    if manifest.get("schema_version") != "1.0" or manifest.get("algorithm") != "sha256":
+        raise ValueError("Unsupported evidence manifest schema or algorithm")
+    root_value = manifest.get("root")
+    if not isinstance(root_value, str):
+        raise TypeError("Manifest root must be a path string")
+    if not root_value:
+        raise ValueError("Manifest root must be a non-empty path string")
+    root = Path(root_value).expanduser().resolve(strict=True)
+    if not root.is_dir():
+        raise ValueError("Manifest root is not a directory")
+    files = manifest.get("files")
+    if not isinstance(files, list):
+        raise TypeError("Manifest files must be an array")
+
+    seen: set[str] = set()
+    for index, item in enumerate(files):
+        if not isinstance(item, dict):
+            raise TypeError(f"Manifest file entry {index} must be an object")
+        path_value = item.get("path")
+        digest = item.get("sha256")
+        size = item.get("size_bytes")
+        if not isinstance(path_value, str) or not path_value.strip():
+            raise TypeError(f"Manifest file entry {index} has an invalid path")
+        rel = Path(path_value)
+        windows_path = PureWindowsPath(path_value)
+        if (
+            rel.is_absolute()
+            or windows_path.is_absolute()
+            or windows_path.drive
+            or "\\" in path_value
+            or ":" in path_value
+            or ".." in rel.parts
+            or rel.as_posix() in {"", "."}
+        ):
+            raise ValueError(f"Unsafe manifest path: {path_value}")
+        normalized = rel.as_posix()
+        if normalized in seen:
+            raise ValueError(f"Duplicate manifest path: {normalized}")
+        seen.add(normalized)
+        if not isinstance(digest, str):
+            raise TypeError(f"SHA-256 digest must be a string for manifest path: {normalized}")
+        if not SHA256_PATTERN.fullmatch(digest):
+            raise ValueError(f"Invalid SHA-256 digest for manifest path: {normalized}")
+        if not isinstance(size, int) or isinstance(size, bool):
+            raise TypeError(f"Byte size must be an integer for manifest path: {normalized}")
+        if size < 0:
+            raise ValueError(f"Invalid byte size for manifest path: {normalized}")
+    return root, files
+
+
 def verify_manifest(manifest_path: str | Path, detect_unlisted: bool = True) -> dict[str, Any]:
     source = Path(manifest_path).expanduser().resolve(strict=True)
     manifest = json.loads(source.read_text(encoding="utf-8"))
-    if manifest.get("schema_version") != "1.0" or manifest.get("algorithm") != "sha256":
-        raise ValueError("Unsupported evidence manifest schema or algorithm")
-    root = Path(manifest["root"]).expanduser().resolve(strict=True)
-    if not root.is_dir():
-        raise ValueError("Manifest root is not a directory")
+    root, files = _validated_manifest(manifest)
 
     seen: set[str] = set()
     results = []
-    for item in manifest.get("files", []):
+    for item in files:
         rel = Path(item["path"])
-        if rel.is_absolute() or ".." in rel.parts:
-            raise ValueError(f"Unsafe manifest path: {item['path']}")
+        normalized = rel.as_posix()
         candidate = root / rel
-        # Reject symlinks in any path component. Resolving first would erase
-        # evidence that the recorded path has changed into a symlink.
         cursor = root
         has_symlink = False
         for part in rel.parts:
@@ -86,15 +135,15 @@ def verify_manifest(manifest_path: str | Path, detect_unlisted: bool = True) -> 
             if cursor.is_symlink():
                 has_symlink = True
                 break
-        seen.add(rel.as_posix())
+        seen.add(normalized)
         if has_symlink:
-            results.append({"path": rel.as_posix(), "status": "unsafe_symlink"})
+            results.append({"path": normalized, "status": "unsafe_symlink"})
             continue
         target = candidate.resolve(strict=False)
         if not _inside(target, root):
             raise ValueError(f"Manifest path escapes root: {item['path']}")
         if not target.is_file():
-            results.append({"path": rel.as_posix(), "status": "missing"})
+            results.append({"path": normalized, "status": "missing"})
             continue
         digest = hashlib.sha256()
         size = 0
@@ -103,8 +152,13 @@ def verify_manifest(manifest_path: str | Path, detect_unlisted: bool = True) -> 
                 digest.update(chunk)
                 size += len(chunk)
         actual = digest.hexdigest()
-        status = "match" if actual == item["sha256"] and size == item["size_bytes"] else "changed"
-        results.append({"path": rel.as_posix(), "status": status, "actual_sha256": actual, "actual_size_bytes": size})
+        status = "match" if actual == item["sha256"].lower() and size == item["size_bytes"] else "changed"
+        results.append({
+            "path": normalized,
+            "status": status,
+            "actual_sha256": actual,
+            "actual_size_bytes": size,
+        })
 
     extras: list[str] = []
     if detect_unlisted:
