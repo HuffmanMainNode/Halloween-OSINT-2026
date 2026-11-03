@@ -87,9 +87,10 @@ def test_rejects_malformed_hash_and_timeout():
 def test_rejects_mismatched_json_rpc_response_id():
     opener = Opener(["0x1"])
     opener.open = lambda request, timeout: Response("0x1", response_id=2)
-    with patch("urllib.request.build_opener", return_value=opener):
-        with pytest.raises(ValueError, match="mismatched response ID"):
-            inspect_transaction("https://node.example/rpc", TX)
+    with patch("urllib.request.build_opener", return_value=opener), pytest.raises(
+        ValueError, match="mismatched response ID"
+    ):
+        inspect_transaction("https://node.example/rpc", TX)
 
 
 @pytest.mark.parametrize(
@@ -103,9 +104,10 @@ def test_rejects_mismatched_json_rpc_response_id():
 )
 def test_rejects_inconsistent_node_results(results, message):
     opener = Opener(results)
-    with patch("urllib.request.build_opener", return_value=opener):
-        with pytest.raises(ValueError, match=message):
-            inspect_transaction("https://node.example/rpc", TX)
+    with patch("urllib.request.build_opener", return_value=opener), pytest.raises(
+        ValueError, match=message
+    ):
+        inspect_transaction("https://node.example/rpc", TX)
 
 
 def test_rejects_oversized_rpc_response():
@@ -115,9 +117,10 @@ def test_rejects_oversized_rpc_response():
 
     opener = Opener(["0x1"])
     opener.open = lambda request, timeout: LargeResponse("0x1")
-    with patch("urllib.request.build_opener", return_value=opener):
-        with pytest.raises(ValueError, match="2 MiB"):
-            inspect_transaction("https://node.example/rpc", TX)
+    with patch("urllib.request.build_opener", return_value=opener), pytest.raises(
+        ValueError, match="2 MiB"
+    ):
+        inspect_transaction("https://node.example/rpc", TX)
 
 
 def test_redirects_are_not_followed():
@@ -133,6 +136,7 @@ def test_rpc_errors_are_bounded():
         }).encode(), "__enter__": lambda self: self, "__exit__": lambda self, *args: False})()
         return response
     opener.open = fail
-    with patch("urllib.request.build_opener", return_value=opener):
-        with pytest.raises(RuntimeError, match="x{200}$"):
-            inspect_transaction("https://node.example/rpc", TX)
+    with patch("urllib.request.build_opener", return_value=opener), pytest.raises(
+        RuntimeError, match="x{200}$"
+    ):
+        inspect_transaction("https://node.example/rpc", TX)
