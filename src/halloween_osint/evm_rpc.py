@@ -28,7 +28,9 @@ class _NoRedirect(HTTPRedirectHandler):
 
 
 def _validate_endpoint(endpoint: str) -> str:
-    if not isinstance(endpoint, str) or not endpoint or any(char.isspace() for char in endpoint):
+    if not isinstance(endpoint, str):
+        raise TypeError("RPC endpoint must be a string")
+    if not endpoint or any(char.isspace() for char in endpoint):
         raise ValueError("RPC endpoint must be a valid absolute URL")
     try:
         parsed = urlsplit(endpoint)
@@ -104,20 +106,26 @@ def _rpc(endpoint: str, method: str, params: list[Any], timeout: float) -> Any:
 def inspect_transaction(endpoint: str, tx_hash: str, timeout: float = 10.0) -> dict[str, Any]:
     """Retrieve a transaction, receipt, and chain ID using read-only JSON-RPC calls."""
     endpoint = _validate_endpoint(endpoint)
-    if not isinstance(tx_hash, str) or not TX_HASH.fullmatch(tx_hash):
+    if not isinstance(tx_hash, str):
+        raise TypeError("transaction hash must be a string")
+    if not TX_HASH.fullmatch(tx_hash):
         raise ValueError("transaction hash must be a 32-byte 0x-prefixed hex value")
-    if not isinstance(timeout, (int, float)) or isinstance(timeout, bool) or not 0 < timeout <= 30:
+    if not isinstance(timeout, (int, float)) or isinstance(timeout, bool):
+        raise TypeError("timeout must be a number")
+    if not 0 < timeout <= 30:
         raise ValueError("timeout must be greater than 0 and no more than 30 seconds")
 
     chain_id = _rpc(endpoint, "eth_chainId", [], timeout)
-    if not isinstance(chain_id, str) or not CHAIN_ID.fullmatch(chain_id):
+    if not isinstance(chain_id, str):
+        raise TypeError("node returned a non-string chain ID")
+    if not CHAIN_ID.fullmatch(chain_id):
         raise ValueError("node returned an invalid chain ID")
     transaction = _rpc(endpoint, "eth_getTransactionByHash", [tx_hash], timeout)
     receipt = _rpc(endpoint, "eth_getTransactionReceipt", [tx_hash], timeout)
     if transaction is not None and not isinstance(transaction, dict):
-        raise ValueError("node returned an invalid transaction object")
+        raise TypeError("node returned a non-object transaction")
     if receipt is not None and not isinstance(receipt, dict):
-        raise ValueError("node returned an invalid receipt object")
+        raise TypeError("node returned a non-object receipt")
     if (
         transaction is not None
         and transaction.get("hash") is not None
