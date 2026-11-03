@@ -9,7 +9,6 @@ from datetime import UTC, datetime
 from pathlib import Path, PureWindowsPath
 from typing import Any
 
-
 SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
 
 
