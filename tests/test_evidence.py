@@ -1,3 +1,4 @@
+import json
 import pytest
 
 from halloween_osint.evidence import create_manifest, verify_manifest
@@ -49,9 +50,6 @@ def test_symlink_substitution_is_not_accepted(tmp_path):
 
 
 def test_duplicate_manifest_paths_are_rejected(tmp_path):
-    import json
-    import pytest
-
     evidence = tmp_path / "case"
     evidence.mkdir()
     (evidence / "note.txt").write_text("original", encoding="utf-8")
@@ -70,8 +68,6 @@ def test_duplicate_manifest_paths_are_rejected(tmp_path):
 )
 def test_unsafe_manifest_paths_are_rejected(tmp_path, path):
     import json
-    import pytest
-
     evidence = tmp_path / "case"
     evidence.mkdir()
     manifest = {
