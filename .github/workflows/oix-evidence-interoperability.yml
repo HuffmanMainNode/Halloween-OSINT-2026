@@ -22,12 +22,15 @@ jobs:
     steps:
       - name: Check out Halloween OSINT
         uses: actions/checkout@v4
-      - name: Check out Open Intelligence Exchange Phase 11
+        with:
+          persist-credentials: false
+      - name: Check out Open Intelligence Exchange at a reviewed commit
         uses: actions/checkout@v4
         with:
           repository: HuffmanMainNode/Open-Intelligence-Exchange
-          ref: integration/phase-11-evidence-submit-contract
+          ref: f2c2326675bf881b6195c5f761b628da6579fe38
           path: Open-Intelligence-Exchange
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
