@@ -86,12 +86,13 @@ def test_unsafe_manifest_paths_are_rejected(tmp_path, path):
 @pytest.mark.parametrize(
     "entry",
     [
-        {"path": "file.txt", "size_bytes": -1, "sha256": "0" * 64},
-        {"path": "file.txt", "size_bytes": True, "sha256": "0" * 64},
-        {"path": "file.txt", "size_bytes": 0, "sha256": "not-a-hash"},
+        ({"path": "file.txt", "size_bytes": -1, "sha256": "0" * 64}, ValueError),
+        ({"path": "file.txt", "size_bytes": True, "sha256": "0" * 64}, TypeError),
+        ({"path": "file.txt", "size_bytes": 0, "sha256": "not-a-hash"}, ValueError),
     ],
 )
-def test_malformed_manifest_file_metadata_is_rejected(tmp_path, entry):
+def test_malformed_manifest_file_metadata_is_rejected(tmp_path, case): 
+    entry, error_type = case
     evidence = tmp_path / "case"
     evidence.mkdir()
     manifest = {
@@ -103,7 +104,7 @@ def test_malformed_manifest_file_metadata_is_rejected(tmp_path, entry):
     manifest_path = tmp_path / "manifest.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error_type):
         verify_manifest(manifest_path)
 
 
