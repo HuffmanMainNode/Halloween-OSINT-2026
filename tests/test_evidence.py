@@ -141,3 +141,58 @@ def test_manifest_files_must_be_an_array(tmp_path):
 
     with pytest.raises(TypeError, match="files must be an array"):
         verify_manifest(manifest_path)
+
+
+def test_duplicate_json_object_keys_are_rejected(tmp_path):
+    evidence = tmp_path / "case"
+    evidence.mkdir()
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        '{"schema_version":"1.0","schema_version":"1.0"}', encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="Duplicate JSON object key"):
+        verify_manifest(manifest_path)
+
+
+def test_oversized_manifest_is_rejected(tmp_path):
+    from halloween_osint.evidence import MAX_MANIFEST_BYTES
+
+    evidence = tmp_path / "case"
+    evidence.mkdir()
+    manifest_path = tmp_path / "manifest.json"
+    with manifest_path.open("wb") as handle:
+        handle.truncate(MAX_MANIFEST_BYTES + 1)
+    with pytest.raises(ValueError, match="exceeds"):
+        verify_manifest(manifest_path)
+
+
+def test_excessively_nested_manifest_is_rejected(tmp_path):
+    evidence = tmp_path / "case"
+    evidence.mkdir()
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        '{"schema_version":"1.0","nested":' + "[" * 100 + "0" + "]" * 100 + "}",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="nesting exceeds"):
+        verify_manifest(manifest_path)
+
+
+def test_manifest_symlink_is_rejected(tmp_path):
+    evidence = tmp_path / "case"
+    evidence.mkdir()
+    original = tmp_path / "original.json"
+    original.write_text(
+        json.dumps({
+            "schema_version": "1.0",
+            "created_at": "2026-11-03T01:00:00+00:00",
+            "algorithm": "sha256",
+            "root": str(evidence),
+            "files": [],
+        }),
+        encoding="utf-8",
+    )
+    link = tmp_path / "manifest-link.json"
+    link.symlink_to(original)
+    with pytest.raises(ValueError, match="manifest symlinks"):
+        verify_manifest(link)
