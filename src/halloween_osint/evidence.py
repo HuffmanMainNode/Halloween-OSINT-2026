@@ -10,6 +10,29 @@ from pathlib import Path, PureWindowsPath
 from typing import Any
 
 SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
+MAX_MANIFEST_BYTES = 16 * 1024 * 1024
+MAX_JSON_NESTING_DEPTH = 64
+
+
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"Duplicate JSON object key: {key}")
+        result[key] = value
+    return result
+
+
+def _check_json_nesting(document: Any) -> None:
+    pending = [(document, 0)]
+    while pending:
+        value, depth = pending.pop()
+        if depth > MAX_JSON_NESTING_DEPTH:
+            raise ValueError(f"Manifest JSON nesting exceeds {MAX_JSON_NESTING_DEPTH} levels")
+        if isinstance(value, dict):
+            pending.extend((child, depth + 1) for child in value.values())
+        elif isinstance(value, list):
+            pending.extend((child, depth + 1) for child in value)
 
 
 def _inside(path: Path, root: Path) -> bool:
@@ -128,8 +151,23 @@ def _validated_manifest(manifest: Any) -> tuple[Path, list[dict[str, Any]]]:
 
 
 def verify_manifest(manifest_path: str | Path, detect_unlisted: bool = True) -> dict[str, Any]:
-    source = Path(manifest_path).expanduser().resolve(strict=True)
-    manifest = json.loads(source.read_text(encoding="utf-8"))
+    requested_source = Path(manifest_path).expanduser()
+    if requested_source.is_symlink():
+        raise ValueError("Evidence manifest symlinks are not accepted")
+    source = requested_source.resolve(strict=True)
+    try:
+        with source.open("rb") as handle:
+            raw = handle.read(MAX_MANIFEST_BYTES + 1)
+        if len(raw) > MAX_MANIFEST_BYTES:
+            raise ValueError(f"Evidence manifest exceeds {MAX_MANIFEST_BYTES} byte limit")
+        manifest = json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object)
+        _check_json_nesting(manifest)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid evidence manifest JSON: {exc}") from exc
+    except UnicodeDecodeError as exc:
+        raise ValueError("Evidence manifest must be UTF-8 JSON") from exc
+    except RecursionError as exc:
+        raise ValueError("Evidence manifest JSON nesting exceeds parser limits") from exc
     root, files = _validated_manifest(manifest)
 
     seen: set[str] = set()
