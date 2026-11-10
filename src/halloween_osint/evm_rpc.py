@@ -27,6 +27,15 @@ class _NoRedirect(HTTPRedirectHandler):
         return None
 
 
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"RPC response contains duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
 def _validate_endpoint(endpoint: str) -> str:
     if not isinstance(endpoint, str):
         raise TypeError("RPC endpoint must be a string")
@@ -81,13 +90,15 @@ def _rpc(endpoint: str, method: str, params: list[Any], timeout: float) -> Any:
     if len(raw) > MAX_RESPONSE_BYTES:
         raise ValueError("RPC response exceeds 2 MiB safety limit")
     try:
-        document = json.loads(raw)
+        document = json.loads(raw, object_pairs_hook=_unique_object)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError("RPC returned invalid JSON") from exc
+    response_id = document.get("id") if isinstance(document, dict) else None
     if (
         not isinstance(document, dict)
         or document.get("jsonrpc") != "2.0"
-        or document.get("id") != 1
+        or type(response_id) is not int
+        or response_id != 1
     ):
         raise ValueError("invalid JSON-RPC response or mismatched response ID")
     error = document.get("error")

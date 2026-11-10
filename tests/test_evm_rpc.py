@@ -84,11 +84,25 @@ def test_rejects_malformed_hash_and_timeout():
         inspect_transaction("https://node.example/rpc", TX, timeout=True)
 
 
-def test_rejects_mismatched_json_rpc_response_id():
+@pytest.mark.parametrize("response_id", [2, True, 1.0, "1", None])
+def test_rejects_non_integer_or_mismatched_json_rpc_response_id(response_id):
     opener = Opener(["0x1"])
-    opener.open = lambda request, timeout: Response("0x1", response_id=2)
+    opener.open = lambda request, timeout: Response("0x1", response_id=response_id)
     with patch("urllib.request.build_opener", return_value=opener), pytest.raises(
         ValueError, match="mismatched response ID"
+    ):
+        inspect_transaction("https://node.example/rpc", TX)
+
+
+def test_rejects_duplicate_json_rpc_response_keys():
+    class DuplicateResponse(Response):
+        def read(self, limit):
+            return b'{"jsonrpc":"2.0","id":2,"id":1,"result":"0x1"}'
+
+    opener = Opener(["0x1"])
+    opener.open = lambda request, timeout: DuplicateResponse("0x1")
+    with patch("urllib.request.build_opener", return_value=opener), pytest.raises(
+        ValueError, match="duplicate JSON key"
     ):
         inspect_transaction("https://node.example/rpc", TX)
 
